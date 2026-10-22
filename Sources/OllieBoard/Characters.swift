@@ -11,6 +11,9 @@ enum Skill: String {
     case flowerField, mimic         // Frieren
     case guitarSolo, melt           // Bocchi
     case morningStar, oniForm       // Rem
+    case speech, fired              // Trump
+    case judo, fishing              // Putin
+    case football, panda            // Xi
 
     var title: String { skillNames[Language.current]?[self] ?? rawValue }
 }
@@ -65,4 +68,16 @@ let allCharacters: [Character] = [
         id: "rem", name: "Rem", anime: "Re:Zero", walkSpeed: 105,
         weights: [.wander: 2, .kick: 1, .arrange: 4, .bored: 1, .sleep: 0.5, .grumpy: 1, .happy: 1.5, .social: 1.5, .skill: 1],
         grumpyAnim: .grumpy, shy: false, prankster: false, skills: [.morningStar, .oniForm]),
+    Character(
+        id: "trump", name: "Donald Trump", anime: "USA", walkSpeed: 90,
+        weights: [.wander: 3, .kick: 3, .arrange: 0.5, .bored: 1, .sleep: 0.8, .grumpy: 1.2, .happy: 2, .social: 2.5, .skill: 1.2],
+        grumpyAnim: .grumpy, shy: false, prankster: true, skills: [.speech, .fired]),
+    Character(
+        id: "putin", name: "Vladimir Putin", anime: "Russia", walkSpeed: 95,
+        weights: [.wander: 2.5, .kick: 1.5, .arrange: 2, .bored: 1, .sleep: 0.7, .grumpy: 0.8, .happy: 0.6, .social: 0.8, .skill: 1.2],
+        grumpyAnim: .grumpy, shy: false, prankster: false, skills: [.judo, .fishing]),
+    Character(
+        id: "xi", name: "Xi Jinping", anime: "China", walkSpeed: 85,
+        weights: [.wander: 2.5, .kick: 0.8, .arrange: 2.5, .bored: 1, .sleep: 1, .grumpy: 0.4, .happy: 1.5, .social: 1.8, .skill: 1.2],
+        grumpyAnim: .grumpy, shy: false, prankster: false, skills: [.football, .panda]),
 ]

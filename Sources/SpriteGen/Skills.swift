@@ -1,6 +1,6 @@
 import AppKit
 
-// The two special-move rows ("skill1", "skill2") hold a different move for each anime character,
+// The two special-move rows ("skill1", "skill2") hold a different move for each character,
 // props included. Agent mascots have no special moves, so their skill rows stay empty.
 
 /// Both rows loop at 8 fps; the app plays a move that shouldn't loop for exactly one cycle (or holds its last frame).
@@ -24,6 +24,12 @@ func drawSkill(_ ctx: CGContext, _ look: Look, _ which: Int, _ i: Int) {
     case (.bocchi, 2): bocchiMelt(ctx, look, i)
     case (.rem, 1): remMorningStar(ctx, look, i)
     case (.rem, 2): remOni(ctx, look, i)
+    case (.trump, 1): trumpSpeech(ctx, look, i)
+    case (.trump, 2): trumpFired(ctx, look, i)
+    case (.putin, 1): putinJudo(ctx, look, i)
+    case (.putin, 2): putinFishing(ctx, look, i)
+    case (.xi, 1): xiFootball(ctx, look, i)
+    case (.xi, 2): xiWave(ctx, look, i)
     default: break
     }
 }
@@ -52,7 +58,10 @@ private func drawHand(_ ctx: CGContext, _ p: CGPoint, _ look: Look, dark: Bool =
 /// Redraws an arm on top of a prop that was drawn over it.
 private func drawArm(_ ctx: CGContext, _ angle: CGFloat, _ look: Look, front: Bool) {
     limb(ctx, from: CGPoint(x: front ? 9 : -9, y: -44), angle: angle, length: 15, width: 5,
-         color: front ? look.sleeve : look.sleeveDark) { drawHand(ctx, $0, look, dark: !front) }
+         color: front ? look.sleeve : look.sleeveDark) { hand in
+        drawCuff(ctx, hand: hand, angle: angle, look)
+        drawHand(ctx, hand, look, dark: !front)
+    }
 }
 
 /// A teardrop flame `size` tall, rising from `base` (the bottom of its round end).
@@ -471,4 +480,173 @@ private func remOni(_ ctx: CGContext, _ look: Look, _ i: Int) {
         }, white, outlineWidth: 1.4)
         ctx.stroke({ $0.move(to: CGPoint(x: base.x - 2, y: base.y - 5)); $0.addLine(to: CGPoint(x: base.x + 2.5, y: base.y - 6)) }, rgb(0xC3C7D6), 1)
     }
+}
+
+// MARK: - Trump: rally speech and "You're fired!"
+
+private func trumpSpeech(_ ctx: CGContext, _ look: Look, _ i: Int) {
+    var p = Pose()
+    p.armFront = [2.4, 2.8, 2.4, 1.9, 1.6, 1.9, 2.6, 2.9][i]; p.armBack = 0.3
+    p.mouth = i % 2 == 0 ? .open : .grin
+    p.brows = i == 1 || i == 7 ? .raised : .none
+    p.eyes = i == 4 ? .half : .open(look: 1)
+    p.bob = [0, -1, 0, 0, 0, 0, -1, -1.5][i]
+    p.tilt = [0, -0.04, 0, 0.03, 0.05, 0.03, 0, -0.04][i]
+    drawCharacter(ctx, p, look)
+    inBody(ctx, p) {
+        drawPodium(ctx)
+        drawArm(ctx, p.armFront, look, front: true)   // gesturing over the podium
+        drawFinger(ctx, hand(p.armFront, front: true), up: true, look)
+    }
+}
+
+/// An index finger sticking out of the fist at `h`, along the arm (or straight up); returns its tip.
+@discardableResult
+private func drawFinger(_ ctx: CGContext, _ h: CGPoint, angle: CGFloat = .pi, up: Bool = false, _ look: Look) -> CGPoint {
+    let a = up ? CGFloat.pi : angle
+    let tip = CGPoint(x: h.x + sin(a) * 8, y: h.y + cos(a) * 8)
+    ctx.stroke({ $0.move(to: h); $0.addLine(to: tip) }, outline, 4.6)
+    ctx.stroke({ $0.move(to: h); $0.addLine(to: tip) }, look.skin, 2.4)
+    drawHand(ctx, h, look)
+    return tip
+}
+
+/// A lectern in front of the body with a microphone and a round gold seal.
+private func drawPodium(_ ctx: CGContext) {
+    ctx.stroke({ $0.move(to: CGPoint(x: 22, y: -37)); $0.addQuadCurve(to: CGPoint(x: 18, y: -54), control: CGPoint(x: 25, y: -47)) }, outline, 2.6)
+    ctx.stroke({ $0.move(to: CGPoint(x: 22, y: -37)); $0.addQuadCurve(to: CGPoint(x: 18, y: -54), control: CGPoint(x: 25, y: -47)) }, rgb(0x6B7385), 1.2)
+    ctx.fill({ $0.addEllipse(in: CGRect(x: 15.5, y: -58, width: 5, height: 6)) }, rgb(0x2B2B33), outlineWidth: 1)
+    ctx.fillGradient({ p in
+        p.move(to: CGPoint(x: 0, y: 0)); p.addLine(to: CGPoint(x: 2, y: -34))
+        p.addLine(to: CGPoint(x: 34, y: -34)); p.addLine(to: CGPoint(x: 36, y: 0)); p.closeSubpath()
+    }, [rgb(0x3A5BA8), rgb(0x1F3570)], from: -34, to: 0, outlineWidth: 1.4)
+    ctx.fill({ $0.addRoundedRect(in: CGRect(x: -2, y: -39, width: 40, height: 6), cornerWidth: 2, cornerHeight: 2) }, rgb(0x6E4A30), outlineWidth: 1.3)
+    ctx.fill({ $0.addEllipse(in: CGRect(x: 11, y: -26, width: 14, height: 14)) }, rgb(0xE3B341), outlineWidth: 1.1)
+    fillStar(ctx, CGPoint(x: 18, y: -19), 4, white)
+}
+
+private func trumpFired(_ ctx: CGContext, _ look: Look, _ i: Int) {
+    var p = Pose()
+    let pointing = i >= 2
+    p.armFront = pointing ? 1.62 : [0.2, -0.3][i]; p.armBack = pointing ? -0.35 : 0.4
+    p.lean = pointing ? 0.06 : -0.05
+    p.legFront = pointing ? 0.25 : 0; p.legBack = pointing ? -0.15 : 0
+    p.eyes = pointing ? .angry : .half; p.brows = pointing ? .angry : .raised
+    p.mouth = (2...5).contains(i) ? .open : .pout
+    p.bob = i == 2 ? -1.5 : 0
+    drawCharacter(ctx, p, look)
+    guard pointing else { return }
+    inBody(ctx, p) {
+        let h = hand(p.armFront, front: true)
+        let tip = drawFinger(ctx, h, angle: p.armFront, look)
+        if (2...4).contains(i) {
+            for (dy, len) in [(-5.0, 9.0), (0.0, 13.0), (5.0, 9.0)] {
+                let x = tip.x + 5 + CGFloat(i - 2) * 3
+                ctx.stroke({ $0.move(to: CGPoint(x: x, y: tip.y + CGFloat(dy))); $0.addLine(to: CGPoint(x: x + CGFloat(len), y: tip.y + CGFloat(dy) * 1.6)) },
+                           outline, 1.6)
+            }
+        }
+    }
+}
+
+// MARK: - Putin: judo throw and fishing
+
+private func putinJudo(_ ctx: CGContext, _ look: Look, _ i: Int) {
+    var p = Pose()
+    // Grab (0-2), pull over the shoulder and slam down in front (3-5), straighten up (6-7).
+    p.armFront = [1.3, 1.5, 1.65, 2.7, 1.7, 0.6, 0.3, 0][i]
+    p.armBack = [1.0, 1.2, 1.4, 2.5, 1.5, 0.5, 0.3, 0.15][i]
+    p.lean = [0, 0.04, 0.08, -0.12, 0.06, 0.16, 0.08, 0][i]
+    p.bob = [3, 3, 3.5, 1, 2, 4, 2, 0][i]
+    p.legFront = [0.4, 0.45, 0.45, 0.25, 0.5, 0.55, 0.3, 0][i]; p.legBack = -p.legFront
+    p.eyes = i < 6 ? .angry : .half; p.brows = i < 6 ? .angry : .none
+    p.mouth = i == 5 ? .open : .flat
+    drawCharacter(ctx, p, look)
+    if (3...5).contains(i) {
+        inBody(ctx, p) {
+            // Swoosh of the throw arcing over to the front.
+            let start: CGFloat = [.pi * 1.25, .pi * 1.45, .pi * 1.7][i - 3]
+            for (k, width) in [(0, CGFloat(3)), (1, CGFloat(1.8))] {
+                ctx.stroke({ $0.addArc(center: CGPoint(x: 6, y: -44), radius: 34 + CGFloat(k) * 6, startAngle: start, endAngle: start + 0.9, clockwise: false) },
+                           rgb(0xFFFFFF, 0.9 - CGFloat(k) * 0.3), width)
+                ctx.stroke({ $0.addArc(center: CGPoint(x: 6, y: -44), radius: 34 + CGFloat(k) * 6, startAngle: start, endAngle: start + 0.9, clockwise: false) },
+                           rgb(0x8A9BB8, 0.5), width * 0.4)
+            }
+        }
+    }
+}
+
+private func putinFishing(_ ctx: CGContext, _ look: Look, _ i: Int) {
+    var p = Pose()
+    p.sitting = true
+    p.armFront = 1.15; p.armBack = 1.0
+    p.eyes = i == 6 ? .wide : .half; p.mouth = i == 6 ? .o : .flat; p.brows = i == 6 ? .raised : .none
+    p.blush = 0.2
+    p.tilt = 0.05
+    let tug: CGFloat = [0, 1, 0, -1, 0, 1, 4, 1][i]
+    drawCharacter(ctx, p, look)
+    inBody(ctx, p) {
+        let h = hand(p.armFront, front: true)
+        let tip = CGPoint(x: h.x + 34, y: h.y - 30 + tug * 0.6)
+        let bobber = CGPoint(x: tip.x + 4, y: -17 + tug)
+        // A small pond in front of him.
+        ctx.fillEllipse(CGPoint(x: bobber.x, y: -14), 18, 4, rgb(0x7FB8E6, 0.7))
+        let ripple = CGFloat(i % 4) / 3
+        ctx.stroke({ $0.addEllipse(in: CGRect(x: bobber.x - 6 - ripple * 6, y: -16 - ripple * 1.5, width: 12 + ripple * 12, height: 3 + ripple * 3)) },
+                   rgb(0xFFFFFF, 0.9 - ripple * 0.6), 1)
+        ctx.stroke({ $0.move(to: tip); $0.addLine(to: CGPoint(x: bobber.x, y: bobber.y - 3)) }, rgb(0x4A4A55, 0.8), 0.7)
+        ctx.stroke({ $0.move(to: CGPoint(x: h.x - 6, y: h.y + 6)); $0.addLine(to: tip) }, outline, 4)
+        ctx.stroke({ $0.move(to: CGPoint(x: h.x - 6, y: h.y + 6)); $0.addLine(to: tip) }, rgb(0x9B6A43), 2)
+        ctx.fill({ $0.addEllipse(in: CGRect(x: bobber.x - 2.5, y: bobber.y - 3, width: 5, height: 5)) }, rgb(0xE5484D), outlineWidth: 0.9)
+        drawHand(ctx, h, look)
+    }
+}
+
+// MARK: - Xi: keepy-uppy and a friendly wave
+
+private func xiFootball(_ ctx: CGContext, _ look: Look, _ i: Int) {
+    var p = Pose()
+    p.legFront = [0.95, 0.5, 0.1, 0, 0.95, 0.5, 0.1, 0][i]
+    p.armFront = 0.55; p.armBack = -0.55
+    p.eyes = i % 4 == 2 ? .happy : .open(look: 1.5); p.mouth = i % 4 == 2 ? .grin : .smile
+    p.bob = [0, -0.5, -1, -0.5, 0, -0.5, -1, -0.5][i]
+    p.tilt = 0.08
+    drawCharacter(ctx, p, look)
+    inBody(ctx, p) {
+        let y: CGFloat = [-19, -36, -50, -36, -19, -36, -50, -36][i]
+        drawFootball(ctx, CGPoint(x: 21, y: y), spin: CGFloat(i) * 0.8)
+    }
+}
+
+/// A black-and-white football.
+private func drawFootball(_ ctx: CGContext, _ c: CGPoint, spin: CGFloat) {
+    let r: CGFloat = 6.5
+    ctx.fill({ $0.addEllipse(in: CGRect(x: c.x - r, y: c.y - r, width: r * 2, height: r * 2)) }, white, outlineWidth: 1.3)
+    ctx.saveGState()
+    ctx.addEllipse(in: CGRect(x: c.x - r, y: c.y - r, width: r * 2, height: r * 2)); ctx.clip()
+    func pentagon(_ center: CGPoint, _ size: CGFloat) {
+        ctx.fill({ p in
+            for k in 0..<5 {
+                let a = spin + CGFloat(k) / 5 * 2 * .pi
+                let pt = CGPoint(x: center.x + cos(a) * size, y: center.y + sin(a) * size)
+                if k == 0 { p.move(to: pt) } else { p.addLine(to: pt) }
+            }
+            p.closeSubpath()
+        }, rgb(0x2B2B33), outlineWidth: 0)
+    }
+    pentagon(c, 2.6)
+    for k in 0..<5 {
+        let a = spin + .pi / 5 + CGFloat(k) / 5 * 2 * .pi
+        pentagon(CGPoint(x: c.x + cos(a) * 7, y: c.y + sin(a) * 7), 2.2)
+    }
+    ctx.restoreGState()
+}
+
+private func xiWave(_ ctx: CGContext, _ look: Look, _ i: Int) {
+    var p = Pose()
+    p.armFront = [2.5, 2.8, 2.5, 2.2, 2.5, 2.8, 2.5, 2.2][i]; p.armBack = 0.1
+    p.eyes = .happy; p.mouth = i % 4 < 2 ? .smile : .grin; p.blush = 0.8
+    p.bob = [0, -0.6, -1, -0.6, 0, -0.6, -1, -0.6][i]
+    p.tilt = -0.05
+    drawCharacter(ctx, p, look)
 }

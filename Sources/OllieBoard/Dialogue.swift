@@ -8,18 +8,22 @@ enum Line: CaseIterable {
     case agentHello, agentWorking, agentDone, agentNeedsYou, agentBye
     // Special moves (see Skill); "{app}" is replaced by the app the user is in.
     case mindRead, mindReadIdle, readFriend, thought, bloodBurst, shrink, grow, flowers, mimicSpot, mimicEaten, mimicOut,
-         guitar, guitarDone, cheer, melt, reform, morningStar, oni, oniCalm
+         guitar, guitarDone, cheer, melt, reform, morningStar, oni, oniCalm,
+         speech, speechDone, fired, judo, fishing, fishCaught, football, footballDone, panda, pandaBye
 
     static let agentOnly: Set<Line> = [.agentHello, .agentWorking, .agentDone, .agentNeedsYou, .agentBye]
     /// Special-move lines only some characters have: their own moves, or how they react to someone else's.
     static let skillSpeakers: [Line: Set<String>] = [
         .mindRead: ["anya"], .mindReadIdle: ["anya"], .readFriend: ["anya"],
-        .thought: ["nezuko", "frieren", "bocchi", "rem"],
+        .thought: ["nezuko", "frieren", "bocchi", "rem", "trump", "putin", "xi"],
         .bloodBurst: ["nezuko"], .shrink: ["nezuko"], .grow: ["nezuko"],
         .flowers: ["frieren"], .mimicSpot: ["frieren"], .mimicEaten: ["frieren"], .mimicOut: ["frieren"],
         .guitar: ["bocchi"], .guitarDone: ["bocchi"], .melt: ["bocchi"], .reform: ["bocchi"],
-        .cheer: ["anya", "nezuko", "frieren", "rem"],
+        .cheer: ["anya", "nezuko", "frieren", "rem", "trump", "putin", "xi"],
         .morningStar: ["rem"], .oni: ["rem"], .oniCalm: ["rem"],
+        .speech: ["trump"], .speechDone: ["trump"], .fired: ["trump"],
+        .judo: ["putin"], .fishing: ["putin"], .fishCaught: ["putin"],
+        .football: ["xi"], .footballDone: ["xi"], .panda: ["xi"], .pandaBye: ["xi"],
     ]
 }
 

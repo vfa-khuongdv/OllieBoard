@@ -118,7 +118,9 @@
     "flower3",
     "flame",
     "glow",
-    "puff"
+    "puff",
+    "fish",
+    "panda"
   ],
   "frameSize" : 128,
   "pixelScale" : 2

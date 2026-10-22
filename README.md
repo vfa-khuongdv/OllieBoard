@@ -6,7 +6,7 @@ The app lives in the menu bar (🐾) only; it has no Dock icon.
 
 ## Features
 
-- **5 characters:** Anya Forger (Spy x Family), Nezuko Kamado (Kimetsu no Yaiba), Frieren (Sousou no Frieren), Hitori Gotoh (Bocchi the Rock!) and Rem (Re:Zero). Each has its own personality and two special moves.
+- **8 characters:** Anya Forger (Spy x Family), Nezuko Kamado (Kimetsu no Yaiba), Frieren (Sousou no Frieren), Hitori Gotoh (Bocchi the Rock!) and Rem (Re:Zero), plus chibi caricatures of Donald Trump, Vladimir Putin and Xi Jinping. Each has its own personality and two special moves.
 - **Desktop interaction:** characters kick icons across the screen, or line them up in a neat grid in the top-right corner of the main screen.
 - **Play room:** a room drawn on the Desktop, underneath your app windows. Characters placed in it stay on its floor and only play with each other.
 - **AI agent mascots:** running sessions of Claude Code, Codex, Gemini CLI, OpenCode, Cursor Agent and Aider are detected automatically.

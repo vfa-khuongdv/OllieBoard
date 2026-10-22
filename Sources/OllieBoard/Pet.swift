@@ -18,7 +18,7 @@ final class Pet {
     /// Things other pets do to this one.
     enum Social {
         case invite(Pet), greet(Pet), woken(Pet), hit(Pet), pranked(Pet), chased(Pet), comfort(Pet)
-        /// Special moves: Anya reading this pet's mind, Bocchi's guitar solo.
+        /// Special moves: Anya reading this pet's mind, a show to watch (Bocchi's guitar solo, Trump's speech, Xi's football).
         case mindRead(Pet), listen(Pet)
     }
 
@@ -736,13 +736,7 @@ final class Pet {
             // The ball hits the ground on frame 5 of the 8-frame swing.
             return engage([.line(.morningStar, to: nil),
                            .hold(.skill1, 0.625),
-                           .run { [weak self] in
-                               guard let self else { return }
-                               let side = self.facing
-                               self.view.impact(dx: 44 * side)
-                               let origin = CGPoint(x: self.position.x, y: self.position.y + 30)
-                               self.blast(from: origin, radius: 230) { ($0.x - origin.x) * side > 0 && abs($0.y - origin.y) < 140 }
-                           },
+                           .run { [weak self] in self?.blastAhead(radius: 230) },
                            .play(.skill1, 0.375),
                            .play(.happy, 1, effect: .sparkle)])
         case .oniForm:
@@ -751,7 +745,57 @@ final class Pet {
                            .play(.skill2, 4, say: .oni),
                            .line(.oniCalm, to: nil),
                            .play(.happy, 1.4)])
+        case .speech:
+            for friend in nearbyFriends(within: 600) { friend.receive(.listen(self)) }
+            return engage([.play(.skill1, 3, say: .speech),
+                           .line(.speech, to: nil),
+                           .play(.skill1, 3.5),
+                           .line(.speechDone, to: nil),
+                           .play(.happy, 1.8, effect: .sparkle)])
+        case .fired:
+            // The finger points on frame 2 of the 8-frame row.
+            return engage([.line(.fired, to: nil),
+                           .hold(.skill2, 0.25),
+                           .run { [weak self] in self?.blastAhead(radius: 260) },
+                           .play(.skill2, 0.75),
+                           .play(.grumpy, 1.2, effect: .anger)])
+        case .judo:
+            // The throw lands on frame 5 of the 8-frame row.
+            return engage([.line(.judo, to: nil),
+                           .hold(.skill1, 0.625),
+                           .run { [weak self] in self?.blastAhead(radius: 220) },
+                           .play(.skill1, 0.375),
+                           .play(.idle, 1, effect: .sparkle)])
+        case .fishing:
+            return engage([.play(.skill2, 5, say: .fishing),
+                           .play(.surprised, 0.5, effect: .exclaim),
+                           .play(.happy, 2, effect: .fish, say: .fishCaught)])
+        case .football:
+            for friend in nearbyFriends(within: 600) { friend.receive(.listen(self)) }
+            return engage([.play(.skill1, 5.5, say: .football),
+                           .line(.footballDone, to: nil),
+                           .play(.happy, 1.6, effect: .sparkle)])
+        case .panda:
+            // The panda sits down beside him, on whichever side has room.
+            func pandaSpot(_ side: CGFloat) -> CGPoint { confined(clampToScreens(CGPoint(x: position.x + side * 52, y: position.y))) }
+            let side = abs(pandaSpot(facing).x - position.x) < 40 ? -facing : facing
+            let dx = pandaSpot(side).x - position.x
+            return engage([.face(side),
+                           .run { [weak self] in self?.view.showProp(SpriteSheet.effect(.panda), dx: dx) },
+                           .play(.skill2, 3.5, effect: .heart, say: .panda),
+                           .play(.happy, 1.4),
+                           .line(.pandaBye, to: nil),
+                           .run { [weak self] in self?.view.showProp(nil, dx: 0) },
+                           .play(.idle, 1)])
         }
+    }
+
+    /// A ground impact in front of the pet that sends icons and friends on that side flying.
+    private func blastAhead(radius: CGFloat) {
+        let side = facing
+        view.impact(dx: 44 * side)
+        let origin = CGPoint(x: position.x, y: position.y + 30)
+        blast(from: origin, radius: radius) { ($0.x - origin.x) * side > 0 && abs($0.y - origin.y) < 140 }
     }
 
     /// Friends on the same side of the room walls who are free to join in.

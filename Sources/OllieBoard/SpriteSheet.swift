@@ -11,7 +11,7 @@ enum Anim: String, CaseIterable {
 enum Effect: String, CaseIterable {
     case heart, note, anger, zzz, dots, sweat, exclaim, sparkle, code, check
     // Props and particles for the special moves.
-    case chest, flower1, flower2, flower3, flame, glow, puff
+    case chest, flower1, flower2, flower3, flame, glow, puff, fish, panda
 }
 
 /// Layout shared by every character sheet (written by SpriteGen).

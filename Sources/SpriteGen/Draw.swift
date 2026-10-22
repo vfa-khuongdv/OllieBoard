@@ -123,6 +123,13 @@ let eyeOffsets: [CGPoint] = [CGPoint(x: -8, y: 3), CGPoint(x: 12, y: 3)]
 func drawFace(_ ctx: CGContext, head c: CGPoint, pose: Pose, look: Look) {
     for o in eyeOffsets {
         let e = CGPoint(x: c.x + o.x, y: c.y + o.y)
+        ctx.saveGState()
+        if look.caricature {
+            // Pale patches around small eyes.
+            ctx.fillEllipse(CGPoint(x: e.x, y: e.y + 0.5), 8.5, 7, rgb(0xFFDCC0, 0.95))
+            ctx.translateBy(x: e.x, y: e.y); ctx.scaleBy(x: 0.68, y: 0.6); ctx.translateBy(x: -e.x, y: -e.y)
+        }
+        defer { ctx.restoreGState() }
         switch pose.eyes {
         case .open(let lookX):
             drawOpenEye(ctx, e, look: lookX, lid: look.restingLid, look)
@@ -156,6 +163,10 @@ func drawFace(_ ctx: CGContext, head c: CGPoint, pose: Pose, look: Look) {
     for (i, o) in eyeOffsets.enumerated() {
         let inner: CGFloat = i == 0 ? 1 : -1   // direction toward the nose
         let x = c.x + o.x, y = c.y + o.y - 11
+        if look.caricature {
+            drawHeavyBrow(ctx, x: x, y: y + 2, inner: inner, pose.brows, look)
+            continue
+        }
         switch pose.brows {
         case .none: break
         case .angry:
@@ -195,7 +206,47 @@ func drawFace(_ ctx: CGContext, head c: CGPoint, pose: Pose, look: Look) {
     }
 
     if look.muzzle { return }   // Nezuko's bamboo covers the mouth.
-    drawMouth(ctx, CGPoint(x: c.x + 3, y: c.y + 15), pose.mouth)
+    if look.caricature { return drawCaricatureMouth(ctx, CGPoint(x: c.x + 3, y: c.y + 15), pose.mouth) }
+    var mouth = pose.mouth
+    if look.smirk, case .smile = mouth { mouth = .smirk }
+    drawMouth(ctx, CGPoint(x: c.x + 3, y: c.y + 15), mouth)
+}
+
+/// A thick brow in the hair color, scowling unless the pose says otherwise.
+func drawHeavyBrow(_ ctx: CGContext, x: CGFloat, y: CGFloat, inner: CGFloat, _ brows: Brows, _ look: Look) {
+    let from: CGPoint, to: CGPoint, control: CGPoint
+    switch brows {
+    case .raised:
+        from = CGPoint(x: x - inner * 6, y: y - 1); to = CGPoint(x: x + inner * 5, y: y - 1); control = CGPoint(x: x, y: y - 7)
+    case .sad:
+        from = CGPoint(x: x - inner * 6, y: y + 1); to = CGPoint(x: x + inner * 5, y: y - 3); control = CGPoint(x: x, y: y - 3)
+    case .angry:
+        from = CGPoint(x: x - inner * 6, y: y - 4); to = CGPoint(x: x + inner * 5, y: y + 3); control = CGPoint(x: x, y: y - 2)
+    case .none:
+        from = CGPoint(x: x - inner * 6, y: y - 2); to = CGPoint(x: x + inner * 5, y: y + 1); control = CGPoint(x: x, y: y - 3)
+    }
+    for (color, width) in [(outline, CGFloat(5.4)), (look.hair, CGFloat(3.6))] {
+        ctx.stroke({ $0.move(to: from); $0.addQuadCurve(to: to, control: control) }, color, width)
+    }
+}
+
+/// Pursed lips at rest; a wide-open shout for the open-mouthed expressions.
+func drawCaricatureMouth(_ ctx: CGContext, _ m: CGPoint, _ mouth: Mouth) {
+    let lip = rgb(0xD9786A)
+    switch mouth {
+    case .open, .grin, .o, .yawn:
+        ctx.fill({ $0.addEllipse(in: CGRect(x: m.x - 5.5, y: m.y - 3, width: 11, height: 11)) }, lip, outlineWidth: 1.4)
+        ctx.fill({ $0.addEllipse(in: CGRect(x: m.x - 3.8, y: m.y - 1.5, width: 7.6, height: 8)) }, rgb(0x4A1A22), outlineWidth: 0)
+        ctx.fillEllipse(CGPoint(x: m.x, y: m.y - 0.6), 3, 1, white)
+        ctx.fillEllipse(CGPoint(x: m.x, y: m.y + 4.5), 2.2, 1.2, rgb(0xE07A86))
+    case .frown, .wavy, .pout:
+        ctx.fill({ $0.addEllipse(in: CGRect(x: m.x - 4.5, y: m.y - 1, width: 9, height: 5)) }, lip, outlineWidth: 1.2)
+        ctx.stroke({ p in p.move(to: CGPoint(x: m.x - 2.5, y: m.y + 2)); p.addQuadCurve(to: CGPoint(x: m.x + 2.5, y: m.y + 2), control: CGPoint(x: m.x, y: m.y)) }, outline, 1)
+    case .smile, .flat, .smirk:
+        // Pushed-out pucker.
+        ctx.fill({ $0.addEllipse(in: CGRect(x: m.x - 3.5, y: m.y - 1.5, width: 7, height: 5.5)) }, lip, outlineWidth: 1.2)
+        ctx.fillEllipse(CGPoint(x: m.x, y: m.y + 1.2), 1.4, 1, rgb(0x6A2A30))
+    }
 }
 
 func drawMouth(_ ctx: CGContext, _ m: CGPoint, _ mouth: Mouth) {
@@ -275,7 +326,8 @@ func drawOpenEye(_ ctx: CGContext, _ e: CGPoint, look lookX: CGFloat, lid: CGFlo
 
 let effectNames = ["heart", "note", "anger", "zzz", "dots", "sweat", "exclaim", "sparkle", "code", "check",
                    // Not emotes: props and particles for the special moves.
-                   "chest", "flower1", "flower2", "flower3", "flame", "glow", "puff"]
+                   "chest", "flower1", "flower2", "flower3", "flame", "glow", "puff",
+                   "fish", "panda"]
 
 func drawEffect(_ ctx: CGContext, _ index: Int) {
     let c = CGPoint(x: 64, y: 64)
@@ -364,6 +416,57 @@ func drawEffect(_ ctx: CGContext, _ index: Int) {
         for (dx, dy, r) in [(-22.0, 6.0, 22.0), (20.0, 8.0, 20.0), (0.0, -12.0, 28.0), (-4.0, 14.0, 20.0)] {
             ctx.fillEllipse(CGPoint(x: c.x + CGFloat(dx), y: c.y + CGFloat(dy)), CGFloat(r), CGFloat(r), white)
         }
+    case 17: // Putin's catch, wriggling above his head
+        ctx.saveGState()
+        ctx.translateBy(x: c.x, y: c.y)
+        ctx.rotate(by: -0.35)
+        ctx.fill({ p in
+            p.move(to: CGPoint(x: 14, y: 0)); p.addLine(to: CGPoint(x: 26, y: -10)); p.addLine(to: CGPoint(x: 24, y: 0))
+            p.addLine(to: CGPoint(x: 26, y: 10)); p.closeSubpath()
+        }, rgb(0x6E9CC4), outlineWidth: 2)
+        ctx.fillGradient({ $0.addEllipse(in: CGRect(x: -22, y: -11, width: 40, height: 22)) }, [rgb(0x9CC4E6), rgb(0xDCEBF7)],
+                         from: -11, to: 11, outlineWidth: 2)
+        ctx.stroke({ p in p.move(to: CGPoint(x: -8, y: -10)); p.addQuadCurve(to: CGPoint(x: -8, y: 10), control: CGPoint(x: -3, y: 0)) }, rgb(0x6E9CC4), 1.6)
+        ctx.fillEllipse(CGPoint(x: -14, y: -3), 3, 3, white)
+        ctx.fillEllipse(CGPoint(x: -14, y: -3), 1.6, 1.6, outline)
+        ctx.restoreGState()
+        drawDrop(ctx, at: CGPoint(x: c.x - 24, y: c.y - 14), size: 1.1)
+        drawDrop(ctx, at: CGPoint(x: c.x + 22, y: c.y + 16), size: 0.9)
+    case 18: // a giant panda sitting beside Xi, standing where a character's feet would be
+        ctx.translateBy(x: feet.x, y: feet.y)
+        ctx.fillEllipse(.zero, 22, 4.5, rgb(0x000000, 0.18))
+        let black = rgb(0x2B2B33)
+        for side: CGFloat in [-1, 1] {   // feet, then arms holding bamboo
+            ctx.fill({ $0.addEllipse(in: CGRect(x: side * 13 - 7, y: -11, width: 14, height: 11)) }, black, outlineWidth: 1.4)
+        }
+        ctx.fill({ $0.addEllipse(in: CGRect(x: -17, y: -40, width: 34, height: 36)) }, white, outlineWidth: 1.6)
+        ctx.stroke({ $0.move(to: CGPoint(x: 9, y: -12)); $0.addLine(to: CGPoint(x: 15, y: -58)) }, outline, 5)
+        ctx.stroke({ $0.move(to: CGPoint(x: 9, y: -12)); $0.addLine(to: CGPoint(x: 15, y: -58)) }, rgb(0x7CC46A), 3)
+        ctx.fill({ p in
+            p.move(to: CGPoint(x: 15, y: -56)); p.addQuadCurve(to: CGPoint(x: 26, y: -64), control: CGPoint(x: 24, y: -56)); p.closeSubpath()
+        }, rgb(0x6ACB70), outlineWidth: 1)
+        for side: CGFloat in [-1, 1] {
+            ctx.fill({ $0.addEllipse(in: CGRect(x: side * 10 - 5.5, y: -35, width: 11, height: 16)) }, black, outlineWidth: 1.2)
+        }
+        let head = CGPoint(x: 0, y: -52)
+        for side: CGFloat in [-1, 1] {
+            ctx.fill({ $0.addEllipse(in: CGRect(x: head.x + side * 12 - 5, y: head.y - 17, width: 10, height: 10)) }, black, outlineWidth: 1.2)
+        }
+        ctx.fill({ $0.addEllipse(in: CGRect(x: head.x - 16, y: head.y - 14, width: 32, height: 27)) }, white, outlineWidth: 1.6)
+        for side: CGFloat in [-1, 1] {
+            ctx.saveGState()
+            ctx.translateBy(x: head.x + side * 6.5, y: head.y - 1)
+            ctx.rotate(by: side * 0.5)
+            ctx.fillEllipse(.zero, 4, 5.5, black)
+            ctx.restoreGState()
+            ctx.fillEllipse(CGPoint(x: head.x + side * 6, y: head.y - 2), 1.5, 1.5, white)
+        }
+        ctx.fillEllipse(CGPoint(x: head.x, y: head.y + 5), 2.4, 1.6, black)
+        ctx.stroke({ p in
+            p.move(to: CGPoint(x: head.x - 3, y: head.y + 8)); p.addQuadCurve(to: CGPoint(x: head.x + 3, y: head.y + 8), control: CGPoint(x: head.x, y: head.y + 10))
+        }, black, 1)
+        ctx.fillEllipse(CGPoint(x: head.x - 10, y: head.y + 5), 3, 1.6, rgb(0xFF8FA3, 0.6))
+        ctx.fillEllipse(CGPoint(x: head.x + 10, y: head.y + 5), 3, 1.6, rgb(0xFF8FA3, 0.6))
     default: break
     }
 }
