@@ -5,6 +5,7 @@ enum UIText {
     case characters, playRoom, agentCharacters, chooseAgents
     case agentIdle, agentWorking, agentDone, agentNeedsYou
     case hookInstalled, installHook
+    case browserInteraction, browserNeedsAccess, openAccessibility, editPage, editPageBlocked, enable
     case finderBlocked, openAutomation, sortByLocked, turnOffSortBy, quit
     case showRoom, scenery, inRoom, editRoom, done, roomHint, politics
     case sceneCozy, sceneKimetsu, sceneOnePiece, sceneAttackOnTitan, sceneJujutsuKaisen, sceneHunterXHunter, sceneUnitedNations
@@ -37,6 +38,12 @@ private let uiTexts: [Language: [UIText: String]] = [
         .agentNeedsYou: "cần bạn duyệt",
         .hookInstalled: "✓ Đã cài hook trạng thái cho Claude Code",
         .installHook: "Cài hook trạng thái cho Claude Code…",
+        .browserInteraction: "Nhân vật nghịch trình duyệt",
+        .browserNeedsAccess: "⚠️ Cần quyền Accessibility để đọc nội dung trang",
+        .openAccessibility: "Mở cài đặt quyền Accessibility…",
+        .enable: "Bật",
+        .editPage: "Sửa trang thật (DOM) bằng JavaScript",
+        .editPageBlocked: "⚠️ Không chạy được JavaScript — bật “Allow JavaScript from Apple Events” trong trình duyệt và cho phép Automation",
         .finderBlocked: "⚠️ Chưa điều khiển được Finder",
         .openAutomation: "Mở cài đặt quyền Automation…",
         .sortByLocked: "⚠️ Desktop đang bật Sort By — icon bị khoá",
@@ -86,6 +93,12 @@ private let uiTexts: [Language: [UIText: String]] = [
         .agentNeedsYou: "needs your approval",
         .hookInstalled: "✓ Claude Code status hook installed",
         .installHook: "Install the Claude Code status hook…",
+        .browserInteraction: "Characters play with the browser",
+        .browserNeedsAccess: "⚠️ Accessibility permission needed to read the page",
+        .openAccessibility: "Open Accessibility settings…",
+        .enable: "Turn on",
+        .editPage: "Edit the real page (DOM) with JavaScript",
+        .editPageBlocked: "⚠️ Can't run JavaScript — turn on “Allow JavaScript from Apple Events” in the browser and allow Automation",
         .finderBlocked: "⚠️ Can't control Finder",
         .openAutomation: "Open Automation settings…",
         .sortByLocked: "⚠️ Desktop Sort By is on — icons are locked",
@@ -135,6 +148,12 @@ private let uiTexts: [Language: [UIText: String]] = [
         .agentNeedsYou: "承認が必要です",
         .hookInstalled: "✓ Claude Code の状態フックをインストール済み",
         .installHook: "Claude Code の状態フックをインストール…",
+        .browserInteraction: "キャラがブラウザで遊ぶ",
+        .browserNeedsAccess: "⚠️ ページを読み取るにはアクセシビリティの許可が必要です",
+        .openAccessibility: "アクセシビリティの設定を開く…",
+        .enable: "オンにする",
+        .editPage: "実際のページ（DOM）をJavaScriptで書き換える",
+        .editPageBlocked: "⚠️ JavaScriptを実行できません — ブラウザで「Apple EventsからのJavaScriptを許可」をオンにし、オートメーションを許可してください",
         .finderBlocked: "⚠️ Finder を操作できません",
         .openAutomation: "オートメーションの設定を開く…",
         .sortByLocked: "⚠️ デスクトップの「並べ替え」がオン — アイコンが固定されています",

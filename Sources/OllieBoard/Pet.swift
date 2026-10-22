@@ -263,6 +263,9 @@ final class Pet {
         weights[.sleep, default: 0] *= 1 + boredom / 60
         weights[.kick, default: 0] *= inRoom ? 0 : hasIcons ? 1 : 0.1
         weights[.arrange, default: 0] *= (!inRoom && hasIcons && world.arranger == nil) ? 1 : 0
+        let window = !inRoom && world.browser.enabled ? world.browser.frontWindow() : nil
+        weights[.prank] = window != nil && world.browser.isTrusted
+            && !world.browser.currentSpots(in: window!).isEmpty ? 2 : 0
         weights[.social, default: 0] *= world.pets.values.contains { $0 !== self && $0.agent == nil && $0.inRoom == inRoom } ? 1 : 0
         let total = weights.values.reduce(0, +)
         var roll = Double.random(in: 0..<max(total, 0.001))
@@ -302,6 +305,8 @@ final class Pet {
                     .run { [weak self] in self?.boredom = max(0, (self?.boredom ?? 0) - 20) }]
         case .social:
             return socialPlan()
+        case .prank:
+            return prankPlan()
         case .skill:
             guard let skill = character.skills.randomElement() else { return plan(for: .wander) }
             return skillPlan(skill)
@@ -384,6 +389,47 @@ final class Pet {
             let p = CGPoint(x: start.x + direction.dx * distance * ease, y: start.y + direction.dy * distance * ease + sin(t * .pi) * 50)
             return CGPoint(x: min(max(p.x, bounds.minX), bounds.maxX), y: min(max(p.y, bounds.minY), bounds.maxY))
         }
+    }
+
+    // MARK: Browser window
+
+    private static let paints: [NSColor] = [.systemPink, .systemOrange, .systemYellow, .systemGreen, .systemTeal, .systemPurple, .systemRed]
+
+    /// Tampers with something on the page (a fake swelling button, a marker swipe over text, a censor bar, a
+    /// scribble, a sticker on an image), then panics, plays innocent and runs off.
+    private func prankPlan() -> [Step] {
+        guard let target = world.browser.frontWindow() else { return plan(for: .wander) }
+        // One of the few spots closest to the pet, so it doesn't cross the whole window for each prank.
+        let near = world.browser.currentSpots(in: target).sorted {
+            hypot($0.frame.midX - position.x, $0.frame.midY - position.y) < hypot($1.frame.midX - position.x, $1.frame.midY - position.y)
+        }.prefix(8)
+        guard let spot = near.randomElement() else { return plan(for: .wander) }
+        let style: ElementPrank.Style
+        switch spot.kind {
+        case .button, .link: style = .swell
+        case .text: style = [.highlight, .highlight, .censor, .scribble].randomElement()!
+        case .heading: style = [.scribble, .highlight, .sticker].randomElement()!
+        case .image: style = .sticker
+        }
+        let frame = spot.frame
+        let side: CGFloat = frame.midX >= position.x ? 1 : -1
+        let stand = clampToScreens(CGPoint(x: (side > 0 ? frame.minX : frame.maxX) - side * 50, y: frame.minY - 40))
+        let escape = clampToScreens(CGPoint(x: position.x + (position.x < screenFrame(containing: stand).midX ? 1 : -1) * 600, y: stand.y))
+        let color = style == .highlight ? NSColor.systemYellow : Self.paints.randomElement() ?? .systemPink
+        let sticker = ["😎", "🐾", "⭐️", "🎀", "👻"].randomElement()!
+        return engage([.walk(stand),
+                       .face(side),
+                       .play(.happy, 1.0, effect: .sparkle, say: .prankStart),
+                       .run { [weak self] in
+                           self?.world.runPrank(style, on: spot, in: target, color: color, sticker: sticker, duration: style == .swell ? 7 : 6)
+                       },
+                       .play(.kick, 0.33),
+                       .play(.happy, 1.4, effect: .note),
+                       .play(.surprised, 0.9, effect: .exclaim, say: .prankPanic),
+                       .face(-side),
+                       .play(.idle, 1.8, effect: .sweat, say: .prankInnocent),
+                       .walk(escape),
+                       .play(.idle, 1)])
     }
 
     // MARK: Arranging icons

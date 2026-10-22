@@ -28,7 +28,7 @@ cat > "$APP/Contents/Info.plist" <<PLIST
     <key>LSMinimumSystemVersion</key><string>13.0</string>
     <key>LSUIElement</key><true/>
     <key>NSAppleEventsUsageDescription</key>
-    <string>OllieBoard cần điều khiển Finder để các nhân vật đá và sắp xếp icon trên Desktop.</string>
+    <string>OllieBoard cần điều khiển Finder để các nhân vật đá và sắp xếp icon trên Desktop, và (nếu bạn bật) trình duyệt để nghịch trang web.</string>
 </dict>
 </plist>
 PLIST
