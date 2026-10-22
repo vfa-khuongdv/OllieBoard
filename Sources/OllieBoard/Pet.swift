@@ -81,7 +81,7 @@ final class Pet {
 
     init(character: Character, world: World, position: CGPoint, agent: AgentSession? = nil) {
         self.character = character
-        self.sheet = agent.map { SpriteSheet.named($0.kind.rawValue, skills: false) } ?? SpriteSheet.named(character.id)
+        self.sheet = SpriteSheet.named(character.sprite ?? character.id)
         self.view = PetView()
         self.world = world
         self.position = position

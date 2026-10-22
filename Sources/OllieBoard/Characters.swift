@@ -32,15 +32,17 @@ struct Character {
     var dialogueID: String? = nil
     var fixedName: String? = nil
     var skills: [Skill] = []
+    /// Sprite sheet name when it differs from `id` (agent mascots borrow a character's look).
+    var sprite: String? = nil
 }
 
 extension AgentKind {
-    /// The mascot for one running session of this agent (its sprite sheet is named after the agent).
-    func character(pid: Int32) -> Character {
+    /// The mascot for one running session of this agent, drawn with `look`'s sprite sheet.
+    func character(pid: Int32, look: Character) -> Character {
         Character(id: "agent-\(pid)", name: title, anime: "AI agent", walkSpeed: 95,
                   weights: [.wander: 3, .kick: 1, .arrange: 0.5, .bored: 1, .sleep: 0.5, .grumpy: 0.3, .happy: 1.5, .social: 1.5],
                   grumpyAnim: .grumpy, shy: false, prankster: false,
-                  dialogueID: "agent", fixedName: title)
+                  dialogueID: "agent", fixedName: title, sprite: look.id)
     }
 }
 

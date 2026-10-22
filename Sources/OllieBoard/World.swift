@@ -75,6 +75,14 @@ final class World {
         }
     }
 
+    /// A random character no one on screen looks like yet; once all are taken, one of the least used.
+    private func freeLook() -> Character {
+        var uses: [String: Int] = [:]
+        for pet in pets.values { uses[pet.character.sprite ?? pet.character.id, default: 0] += 1 }
+        let fewest = allCharacters.map { uses[$0.id, default: 0] }.min() ?? 0
+        return allCharacters.filter { uses[$0.id, default: 0] == fewest }.randomElement()!
+    }
+
     private func syncAgents(_ sessions: [Int32: AgentSession]) {
         let disabled = disabledAgentKinds
         let sessions = sessions.filter { !disabled.contains($0.value.kind) }
@@ -84,7 +92,7 @@ final class World {
                 continue
             }
             // Starts hidden; the mascot shows itself once the agent works or waits for the user.
-            let character = session.kind.character(pid: pid)
+            let character = session.kind.character(pid: pid, look: freeLook())
             let pet = Pet(character: character, world: self, position: .zero, agent: session)
             pets[character.id] = pet
             agentPets[pid] = pet

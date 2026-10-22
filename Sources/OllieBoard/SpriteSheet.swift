@@ -2,10 +2,8 @@ import AppKit
 
 enum Anim: String, CaseIterable {
     case idle, walk, run, kick, carry, happy, bored, yawn, sleep, grumpy, dragged, surprised, work, sad
-    /// Each character's two special moves (see Skill); empty for agent mascots.
+    /// Each character's two special moves (see Skill).
     case skill1, skill2
-
-    var isSkill: Bool { self == .skill1 || self == .skill2 }
 }
 
 enum Effect: String, CaseIterable {
@@ -43,10 +41,10 @@ final class SpriteSheet {
 
     private static var cache: [String: SpriteSheet] = [:]
 
-    /// Shared so each sheet is decoded only once. Agent mascots have no special moves, so they skip those rows.
-    static func named(_ id: String, skills: Bool = true) -> SpriteSheet {
+    /// Shared so each sheet is decoded only once.
+    static func named(_ id: String) -> SpriteSheet {
         if let sheet = cache[id] { return sheet }
-        let sheet = SpriteSheet(characterID: id, skills: skills)
+        let sheet = SpriteSheet(characterID: id)
         cache[id] = sheet
         return sheet
     }
@@ -64,9 +62,9 @@ final class SpriteSheet {
 
     private var frames: [Anim: [CGImage]] = [:]
 
-    private init(characterID: String, skills: Bool) {
+    private init(characterID: String) {
         let layout = Self.layout
-        for anim in Anim.allCases where skills || !anim.isSkill {
+        for anim in Anim.allCases {
             guard let info = layout.animations[anim.rawValue] else { continue }
             frames[anim] = Self.cells(of: characterID, (0..<info.frames).map { ($0, info.row) })
         }
