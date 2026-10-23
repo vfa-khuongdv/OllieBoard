@@ -35,6 +35,10 @@ func drawAnimeSkill(_ ctx: CGContext, _ look: Look, _ which: Int, _ i: Int) {
     case ("kurapika", 2): kurapikaScarlet(ctx, look, i)
     case ("catknight", 1): catKnightOath(ctx, look, i)
     case ("catknight", 2): catKnightShield(ctx, look, i)
+    case ("mikoto", 1): mikotoRailgun(ctx, look, i)
+    case ("mikoto", 2): mikotoIronSand(ctx, look, i)
+    case ("maomao", 1): maomaoPoisonTest(ctx, look, i)
+    case ("maomao", 2): maomaoHerbalBrew(ctx, look, i)
     default: break
     }
 }
@@ -430,7 +434,7 @@ private func mikasaScarf(_ ctx: CGContext, _ look: Look, _ i: Int) {
         // The scarf pulled up over her mouth.
         ctx.saveGState()
         ctx.translateBy(x: 0, y: -50); ctx.rotate(by: p.tilt); ctx.translateBy(x: 0, y: 50)
-        ctx.fill({ $0.addRoundedRect(in: CGRect(x: -24, y: -63, width: 50, height: 11), cornerWidth: 5, cornerHeight: 6) },
+        ctx.fill({ $0.addRoundedRect(in: CGRect(x: -24, y: -63, width: 50, height: 11), cornerWidth: 5, cornerHeight: 5) },
                  look.tie ?? rgb(0xC8323A), outlineWidth: 1.3)
         ctx.restoreGState()
         for front in [false, true] {
@@ -835,6 +839,179 @@ private func catKnightShield(_ ctx: CGContext, _ base: Look, _ i: Int) {
             for dy: CGFloat in [-70, -46, -22] {
                 ctx.stroke({ $0.move(to: CGPoint(x: x1 + 4, y: dy)); $0.addLine(to: CGPoint(x: x1 + 12, y: dy - 3)) }, outline, 2)
             }
+        }
+    }
+}
+
+// MARK: - Maomao: testing a suspicious vial and brewing herbs in a mortar
+
+private func maomaoPoisonTest(_ ctx: CGContext, _ look: Look, _ i: Int) {
+    // Holds a vial up, shakes it, sniffs it, then nods at the verdict. Purely a visual effect.
+    let shake: [CGFloat] = [0, 0.3, -0.3, 0.3, -0.3, 0.2, 0, 0]
+    var p = Pose()
+    p.armFront = [1.6, 2.2, 2.4, 2.4, 2.4, 2.2, 2.0, 1.8][i]; p.armBack = 0.2
+    p.eyes = i < 5 ? .open(look: 1) : .half; p.brows = i < 5 ? .none : .sad
+    p.mouth = i == 6 ? .smile : .flat
+    p.tilt = shake[i] * 0.06
+    drawCharacter(ctx, p, look)
+    inBody(ctx, p) {
+        let h = hand(p.armFront, front: true)
+        let at = CGPoint(x: h.x + shake[i] * 6, y: h.y - 4)
+        ctx.fill({ $0.addRoundedRect(in: CGRect(x: at.x - 4.5, y: at.y - 8, width: 9, height: 13), cornerWidth: 3, cornerHeight: 3) },
+                 rgb(0xB28CFF, 0.85), outlineWidth: 1.4)
+        ctx.fill({ $0.addRect(CGRect(x: at.x - 2, y: at.y - 13, width: 4, height: 6)) }, rgb(0xF4E7D2), outlineWidth: 1.2)
+        ctx.fill({ $0.addRect(CGRect(x: at.x - 4, y: at.y - 1, width: 8, height: 4)) }, rgb(0x7ADFA8, 0.9), outlineWidth: 0)
+        drawHand(ctx, h, look)
+        if (2...5).contains(i) {
+            for k in 0..<3 {
+                let r = CGFloat(2 + k % 2), y = at.y - 16 - CGFloat((i * 3 + k * 5) % 12)
+                let x = at.x + CGFloat(k - 1) * 6 + shake[i] * 4
+                ctx.fill({ $0.addEllipse(in: CGRect(x: x - r, y: y - r, width: r * 2, height: r * 2)) },
+                         k == 1 ? rgb(0x7ADFA8, 0.9) : rgb(0xB28CFF, 0.9), outlineWidth: 0.8)
+            }
+        }
+        if i >= 6 { fillStar(ctx, CGPoint(x: at.x + 12, y: at.y - 16), 4, rgb(0xFFE88A)) }
+    }
+}
+
+private func maomaoHerbalBrew(_ ctx: CGContext, _ look: Look, _ i: Int) {
+    // A mortar held in front; the pestle grinds (frames 0-4), herbs swirl up, then a soft glow of recovery.
+    var p = Pose()
+    p.armFront = 0.9 + [0, 0.15, 0, 0.15, 0, 0.1, 0, 0][i]; p.armBack = 0.9
+    p.eyes = i < 5 ? .open(look: 0.5) : .happy; p.mouth = i < 5 ? .flat : .smile
+    p.blush = i < 5 ? 0.3 : 1
+    drawCharacter(ctx, p, look)
+    inBody(ctx, p) {
+        let c = CGPoint(x: 20, y: -24)
+        ctx.fill({ p in
+            p.move(to: CGPoint(x: c.x - 12, y: c.y - 8)); p.addLine(to: CGPoint(x: c.x + 12, y: c.y - 8))
+            p.addQuadCurve(to: CGPoint(x: c.x, y: c.y + 8), control: CGPoint(x: c.x + 12, y: c.y + 8))
+            p.addQuadCurve(to: CGPoint(x: c.x - 12, y: c.y - 8), control: CGPoint(x: c.x - 12, y: c.y + 8))
+        }, rgb(0x9A8A7A), outlineWidth: 1.6)
+        ctx.fill({ $0.addEllipse(in: CGRect(x: c.x - 10, y: c.y - 11, width: 20, height: 6)) }, rgb(0x5A7A4A), outlineWidth: 1.2)
+        let sway: CGFloat = i < 5 ? [-4, 0, 4, 0, -4][i] : 0
+        ctx.stroke({ $0.move(to: CGPoint(x: c.x + sway, y: c.y - 8)); $0.addLine(to: CGPoint(x: c.x + 6 + sway * 1.5, y: c.y - 30)) },
+                   rgb(0xE8D8B8), 4)
+        drawHand(ctx, CGPoint(x: c.x + 6 + sway * 1.5, y: c.y - 30), look)
+        for k in 0..<4 {
+            let t = CGFloat(i) / 8 + CGFloat(k) * 0.25
+            let a = t * 2 * .pi
+            let leaf = CGPoint(x: c.x + 22 + cos(a) * 8, y: c.y - 14 - (t.truncatingRemainder(dividingBy: 1)) * 30 + sin(a) * 4)
+            ctx.fill({ $0.addEllipse(in: CGRect(x: leaf.x - 3.5, y: leaf.y - 2, width: 7, height: 4)) },
+                     k % 2 == 0 ? rgb(0x6FBF73) : rgb(0xE88AB0), outlineWidth: 0.8)
+        }
+        if i >= 5 {
+            let a = CGFloat(i - 4) * 0.25
+            ctx.fillEllipse(CGPoint(x: c.x, y: c.y - 14), 14 + CGFloat(i - 5) * 4, 14 + CGFloat(i - 5) * 4, rgb(0xCFFFD8, 0.4 - a * 0.2))
+            fillStar(ctx, CGPoint(x: c.x + 24, y: c.y - 40), 4, rgb(0xFFE88A))
+            fillStar(ctx, CGPoint(x: c.x + 32, y: c.y - 22), 3, rgb(0xFFFFFF))
+        }
+    }
+}
+
+// MARK: - Misaka Mikoto: Railgun and the Iron Sand sword
+
+private func sparkBolt(_ ctx: CGContext, from a: CGPoint, to b: CGPoint, seed: Int, width: CGFloat = 2) {
+    let path = CGMutablePath(); path.move(to: a)
+    let n = 4
+    for k in 1..<n {
+        let t = CGFloat(k) / CGFloat(n)
+        let jag = CGFloat((seed * 7 + k * 5) % 9) - 4
+        path.addLine(to: CGPoint(x: a.x + (b.x - a.x) * t + jag * 0.6, y: a.y + (b.y - a.y) * t + jag))
+    }
+    path.addLine(to: b)
+    ctx.stroke({ $0.addPath(path) }, rgb(0xFFFFFF, 0.95), width + 1.6)
+    ctx.stroke({ $0.addPath(path) }, rgb(0x6FB8FF), width)
+}
+
+private func mikotoRailgun(_ ctx: CGContext, _ look: Look, _ i: Int) {
+    // Flicks a coin up (0-2), catches it and aims (3), fires an orange beam (4-6), then smirks (7).
+    var p = Pose()
+    p.armFront = [2.3, 2.6, 2.1, 1.55, 1.55, 1.55, 1.55, 1.2][i]; p.armBack = i < 3 ? 0.3 : 0.8
+    p.legFront = i >= 3 ? 0.35 : 0; p.legBack = i >= 3 ? -0.35 : 0
+    p.lean = i >= 4 && i <= 6 ? -0.08 : 0
+    p.eyes = i < 3 ? .open(look: 1) : (i == 7 ? .happy : .angry)
+    p.brows = i >= 3 && i < 7 ? .angry : .none
+    p.mouth = i >= 4 && i <= 6 ? .open : (i == 7 ? .smirk : .flat)
+    p.blush = i == 7 ? 1 : 0.5
+    p.hairSwing = i >= 4 && i <= 6 ? 0.1 : 0
+    drawCharacter(ctx, p, look)
+    inBody(ctx, p) {
+        let h = hand(p.armFront, front: true)
+        if i <= 2 {
+            let coinY = h.y - [10, 24, 12][i]
+            ctx.fill({ $0.addEllipse(in: CGRect(x: h.x - 4, y: coinY - 4, width: 8, height: 8)) }, rgb(0xE8E4D8), outlineWidth: 1.3)
+            ctx.fillEllipse(CGPoint(x: h.x, y: coinY), 1.6, 1.6, rgb(0xB5B09E))
+            if i == 1 { fillStar(ctx, CGPoint(x: h.x + 7, y: coinY - 5), 3, rgb(0xFFE88A)) }
+        }
+        drawHand(ctx, h, look)
+        if i >= 2 && i <= 6 {
+            for k in 0..<3 { sparkBolt(ctx, from: CGPoint(x: -14 + CGFloat(k) * 14, y: -62 + CGFloat(k % 2) * 4),
+                                       to: CGPoint(x: -22 + CGFloat(k) * 22, y: -78 - CGFloat(k % 2) * 6), seed: i + k) }
+        }
+        if i == 3 {
+            ctx.fill({ $0.addEllipse(in: CGRect(x: h.x - 2, y: h.y - 5, width: 10, height: 10)) }, rgb(0xFFD89A, 0.9), outlineWidth: 0)
+            ctx.stroke({ $0.addEllipse(in: CGRect(x: h.x - 5, y: h.y - 8, width: 16, height: 16)) }, rgb(0xFFB347, 0.8), 1.6)
+        }
+        if i >= 4 && i <= 6 {
+            let thick: CGFloat = [7, 10, 5][i - 4]
+            let start = CGPoint(x: h.x + 4, y: h.y)
+            let end = CGPoint(x: 70, y: h.y)
+            ctx.stroke({ $0.move(to: start); $0.addLine(to: end) }, rgb(0xFF9A2E, 0.55), thick + 5)
+            ctx.stroke({ $0.move(to: start); $0.addLine(to: end) }, rgb(0xFFC15A), thick)
+            ctx.stroke({ $0.move(to: start); $0.addLine(to: end) }, rgb(0xFFFFFF), thick * 0.45)
+            ctx.fill({ $0.addEllipse(in: CGRect(x: h.x - 4, y: h.y - thick, width: thick * 2, height: thick * 2)) }, rgb(0xFFFFFF, 0.95), outlineWidth: 0)
+            for k in 0..<3 { sparkBolt(ctx, from: CGPoint(x: h.x + 14 + CGFloat(k) * 14, y: h.y), to: CGPoint(x: h.x + 22 + CGFloat(k) * 14, y: h.y + (k % 2 == 0 ? -12 : 12)), seed: i + k) }
+        }
+        if i == 7 { fillStar(ctx, CGPoint(x: h.x + 14, y: h.y - 8), 4, rgb(0xFFE88A)) }
+    }
+}
+
+private func mikotoIronSand(_ ctx: CGContext, _ look: Look, _ i: Int) {
+    // Black sand gathers into a long sword (0-3), she swings it down (4-5) and it crumbles back to sand (6-7).
+    var p = Pose()
+    p.armFront = [2.2, 2.4, 2.5, 2.5, 2.1, 1.3, 1.1, 1.0][i]; p.armBack = i < 4 ? 2.0 : 0.6
+    p.lean = [0, 0, -0.05, -0.05, 0.05, 0.12, 0.08, 0][i]
+    p.legFront = i >= 4 ? 0.45 : 0; p.legBack = i >= 4 ? -0.35 : 0
+    p.eyes = i < 7 ? .angry : .half; p.brows = i < 7 ? .angry : .none
+    p.mouth = i >= 4 && i <= 5 ? .open : .pout; p.blush = 0.7
+    drawCharacter(ctx, p, look)
+    inBody(ctx, p) {
+        let h = hand(p.armFront, front: true)
+        let sand = rgb(0x2A2A32), sandLight = rgb(0x55556A)
+        // Drifting grains of sand.
+        for k in 0..<10 {
+            let a: CGFloat = CGFloat(k) * 0.9 + CGFloat(i) * 0.7
+            let wobble: CGFloat = CGFloat(k % 3)
+            let r: CGFloat = i < 4 ? 34 - CGFloat(i) * 7 - wobble * 3 : 8 + CGFloat(i - 4) * 9 + wobble * 4
+            let cx: CGFloat = h.x + 4 + cos(a) * r * 0.8
+            let cy: CGFloat = h.y - 14 + sin(a) * r * 0.55
+            let grain: CGColor = k % 2 == 0 ? sand : sandLight
+            ctx.fill({ $0.addEllipse(in: CGRect(x: cx - 1.4, y: cy - 1.4, width: 2.8, height: 2.8)) }, grain, outlineWidth: 0)
+        }
+        if i >= 2 && i <= 6 {
+            let lens: [CGFloat] = [0, 0, 20, 40, 48, 48, 26, 0]
+            let angles: [CGFloat] = [0, 0, 3.1, 3.0, 2.5, 1.6, 1.2, 0]
+            let len = lens[i], angle = angles[i]
+            let d = CGPoint(x: sin(angle), y: cos(angle))
+            let tip = CGPoint(x: h.x + d.x * len, y: h.y + d.y * len)
+            ctx.stroke({ $0.move(to: h); $0.addLine(to: tip) }, outline, 9)
+            ctx.stroke({ $0.move(to: h); $0.addLine(to: tip) }, sand, 7)
+            ctx.stroke({ $0.move(to: CGPoint(x: h.x + d.x * 3, y: h.y + d.y * 3)); $0.addLine(to: tip) }, sandLight, 1.6)
+            // Serrated edge, like grains held together by magnetism.
+            for k in 1..<Int(len / 6) {
+                let c = CGPoint(x: h.x + d.x * CGFloat(k) * 6, y: h.y + d.y * CGFloat(k) * 6)
+                ctx.fill({ $0.addEllipse(in: CGRect(x: c.x + d.y * 2.5 - 1.2, y: c.y - d.x * 2.5 - 1.2, width: 2.4, height: 2.4)) }, sand, outlineWidth: 0)
+            }
+            if i == 5 {
+                ctx.stroke({ $0.addArc(center: CGPoint(x: 4, y: -60), radius: 46, startAngle: -1.0, endAngle: 0.9, clockwise: false) },
+                           rgb(0xFFFFFF, 0.9), 3)
+                sparkBolt(ctx, from: tip, to: CGPoint(x: tip.x + 10, y: tip.y + 8), seed: 3)
+            }
+        }
+        drawHand(ctx, h, look)
+        if i >= 2 && i <= 5 {
+            sparkBolt(ctx, from: CGPoint(x: h.x, y: h.y - 4), to: CGPoint(x: h.x + 10, y: h.y - 16), seed: i)
         }
     }
 }

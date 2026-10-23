@@ -62,6 +62,7 @@ final class Pet {
     private var clicks: [TimeInterval] = []
     /// Busy with a kick, cleanup or visit; other pets won't pull it into a social interaction.
     private var engaged = false
+    private var leavingZone = false
 
     /// Set for the mascot of a running AI agent session.
     private(set) var agent: AgentSession?
@@ -147,6 +148,7 @@ final class Pet {
         if dragging {
             setAnim(.dragged)
         } else {
+            leaveKeepOutZone()
             advance(dt)
         }
         if [.idle, .walk, .bored].contains(anim) { boredom += dt }
@@ -190,13 +192,14 @@ final class Pet {
             setAnim(carrying != nil ? .carry : fast ? .run : .walk)
             if abs(dx) > 1 { facing = dx > 0 ? 1 : -1 }
             let len = CGFloat(speed * dt)
-            if dist <= len {
-                position = target
+            let next = dist <= len ? target : CGPoint(x: position.x + dx / dist * len, y: position.y + dy / dist * len)
+            // Never walk into a keep-out zone; a walk that would is simply over.
+            if !inRoom, world.zones.blocks(AvoidZones.body(at: next)), !world.zones.blocks(AvoidZones.body(at: position)) {
                 current = nil
-            } else {
-                position.x += dx / dist * len
-                position.y += dy / dist * len
+                break
             }
+            position = next
+            if dist <= len { current = nil }
             if let name = carrying { world.desktop.moveLive(name, to: carryPoint) }
         case .fall(let y):
             setAnim(.dragged)
@@ -1149,6 +1152,38 @@ final class Pet {
                            },
                            .play(.skill2, 1.6),
                            .play(.happy, 1.2, effect: .sparkle)])
+        case .railgun:
+            // Flips a coin and fires the beam on frame 4; the beam is only a visual and shoves nothing.
+            return engage([.play(.skill1, 0.9, say: .railgun),
+                           .run { [weak self] in
+                               guard let self else { return }
+                               self.view.sparks(color: Pet.cursed, for: 0.6)
+                               self.view.shake()
+                               self.view.impact(dx: -self.facing * 14)
+                           },
+                           .play(.skill1, 1.1),
+                           .play(.happy, 1.2, effect: .sparkle)])
+        case .ironSand:
+            return engage([.play(.skill2, 0.5, say: .ironSand),
+                           .run { [weak self] in
+                               guard let self else { return }
+                               self.view.slash(color: CGColor(srgbRed: 0.16, green: 0.16, blue: 0.2, alpha: 0.95), facing: self.facing)
+                               self.view.sparks(color: Pet.cursed, for: 0.5)
+                           },
+                           .play(.skill2, 1.6),
+                           .play(.idle, 0.8, effect: .anger)])
+        case .poisonTest:
+            // Shakes the vial and watches the purple bubbles; only a visual, nothing on the Desktop changes.
+            return [.play(.skill1, 0.4, say: .poisonTest),
+                    .run { [weak self] in self?.view.aura(for: 2.4, color: Pet.purple) },
+                    .play(.skill1, 2.2),
+                    .play(.idle, 0.8, effect: .dots)]
+        case .herbalBrew:
+            // Grinds herbs in the mortar, then a soft recovery glow. Also only a visual.
+            return [.play(.skill2, 0.4, say: .herbalBrew),
+                    .run { [weak self] in self?.view.sparks(color: CGColor(srgbRed: 0.5, green: 0.9, blue: 0.55, alpha: 1), for: 2.4) },
+                    .play(.skill2, 2.2),
+                    .play(.happy, 1.2, effect: .sparkle)]
         }
     }
 
@@ -1314,7 +1349,27 @@ final class Pet {
                        y: min(max(p.y, f.minY), f.maxY - 130))
     }
 
+    /// Walks out of a keep-out zone the pet ended up in (the zone was switched on or moved over it, or it was dropped there).
+    private func leaveKeepOutZone() {
+        guard !inRoom, agent == nil || visible else { return }
+        guard let exit = world.zones.exitPoint(from: position, screen: screenFrame(containing: position)) else {
+            leavingZone = false
+            return
+        }
+        guard !leavingZone else { return }
+        leavingZone = true
+        interrupt([.walk(exit), .run { [weak self] in self?.leavingZone = false }])
+    }
+
     private func randomDestination() -> CGPoint {
+        for _ in 0..<12 {
+            let spot = pickDestination()
+            if inRoom || !world.zones.blocks(AvoidZones.body(at: spot)) { return spot }
+        }
+        return pickDestination()
+    }
+
+    private func pickDestination() -> CGPoint {
         if inRoom { return world.room.randomSpot() }
         let screens = NSScreen.screens
         let here = screens.first { $0.frame.contains(position) } ?? screens[0]

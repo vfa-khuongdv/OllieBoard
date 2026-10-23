@@ -6,6 +6,7 @@ enum UIText {
     case agentIdle, agentWorking, agentDone, agentNeedsYou
     case hookInstalled, installHook
     case finderBlocked, openAutomation, sortByLocked, turnOffSortBy, quit
+    case avoidZones, avoidCenter, avoidCustom, editAvoid, avoidHint
     case showRoom, scenery, inRoom, editRoom, done, roomHint, politics
     case sceneCozy, sceneKimetsu, sceneOnePiece, sceneAttackOnTitan, sceneJujutsuKaisen, sceneHunterXHunter, sceneUnitedNations
     /// "%@" is the path of Claude Code's settings file.
@@ -42,6 +43,11 @@ private let uiTexts: [Language: [UIText: String]] = [
         .sortByLocked: "⚠️ Desktop đang bật Sort By — icon bị khoá",
         .turnOffSortBy: "Tắt Sort By trên Desktop",
         .quit: "Thoát OllieBoard",
+        .avoidZones: "Vùng né (khi quay màn hình)",
+        .avoidCenter: "Né chính giữa màn hình",
+        .avoidCustom: "Né vùng tự chọn",
+        .editAvoid: "Chỉnh vùng né…",
+        .avoidHint: "Kéo để di chuyển · kéo góc ↘ để đổi kích thước",
         .showRoom: "Hiện phòng chơi",
         .scenery: "Phong cảnh",
         .inRoom: "Ở trong phòng:",
@@ -91,6 +97,11 @@ private let uiTexts: [Language: [UIText: String]] = [
         .sortByLocked: "⚠️ Desktop Sort By is on — icons are locked",
         .turnOffSortBy: "Turn off Sort By on the Desktop",
         .quit: "Quit OllieBoard",
+        .avoidZones: "Keep-out zones (for screen recording)",
+        .avoidCenter: "Avoid the middle of the screen",
+        .avoidCustom: "Avoid a custom area",
+        .editAvoid: "Move and resize the area…",
+        .avoidHint: "Drag to move · drag the ↘ corner to resize",
         .showRoom: "Show the play room",
         .scenery: "Scenery",
         .inRoom: "In the room:",
@@ -140,6 +151,11 @@ private let uiTexts: [Language: [UIText: String]] = [
         .sortByLocked: "⚠️ デスクトップの「並べ替え」がオン — アイコンが固定されています",
         .turnOffSortBy: "デスクトップの「並べ替え」をオフにする",
         .quit: "OllieBoard を終了",
+        .avoidZones: "立ち入り禁止エリア（画面収録用）",
+        .avoidCenter: "画面の中央を避ける",
+        .avoidCustom: "指定したエリアを避ける",
+        .editAvoid: "エリアの位置とサイズを変更…",
+        .avoidHint: "ドラッグで移動 · ↘の角でサイズ変更",
         .showRoom: "プレイルームを表示",
         .scenery: "背景",
         .inRoom: "部屋にいるキャラ:",

@@ -5,6 +5,7 @@ final class World {
     let desktop = DesktopIcons()
     let agents = AgentMonitor()
     let room = Room()
+    let zones = AvoidZones()
     private(set) var pets: [String: Pet] = [:]
     /// Mascots of running AI agent sessions, by agent process id.
     private(set) var agentPets: [Int32: Pet] = [:]

@@ -30,6 +30,8 @@ enum Skill: String {
     case godspeed, chocolate        // Killua
     case chainJail, scarletEyes     // Kurapika
     case knightOath, shieldBash     // Cat Knight
+    case poisonTest, herbalBrew     // Maomao
+    case railgun, ironSand          // Mikoto
 
     var title: String { skillNames[Language.current]?[self] ?? rawValue }
 }
@@ -46,6 +48,8 @@ enum Series: String, CaseIterable {
     case bocchi = "Bocchi the Rock!"
     case reZero = "Re:Zero"
     case catKnight = "Cat Knight"
+    case apothecaryDiaries = "The Apothecary Diaries"
+    case magicalIndex = "A Certain Magical Index"
     case politics = "Chính trị"
 
     /// Series names stay as they are; only "politics" is translated.
@@ -103,6 +107,15 @@ let allCharacters: [Character] = [
         id: "rem", name: "Rem", series: .reZero, walkSpeed: 105,
         weights: [.wander: 2, .kick: 1, .arrange: 4, .bored: 1, .sleep: 0.5, .grumpy: 1, .happy: 1.5, .social: 1.5, .skill: 1],
         grumpyAnim: .grumpy, shy: false, prankster: false, skills: [.morningStar, .oniForm]),
+    Character(
+        id: "maomao", name: "Maomao", series: .apothecaryDiaries, walkSpeed: 88,
+        weights: [.wander: 2.6, .kick: 0.4, .arrange: 3.2, .bored: 2, .sleep: 0.8, .grumpy: 1.1, .happy: 0.8, .social: 0.9, .skill: 1.4],
+        grumpyAnim: .grumpy, shy: false, prankster: false, skills: [.poisonTest, .herbalBrew]),
+
+    Character(
+        id: "mikoto", name: "Misaka Mikoto", series: .magicalIndex, walkSpeed: 105,
+        weights: [.wander: 2.5, .kick: 2.6, .arrange: 1, .bored: 1.2, .sleep: 0.8, .grumpy: 2.2, .happy: 1, .social: 1.4, .skill: 1.4],
+        grumpyAnim: .grumpy, shy: false, prankster: false, skills: [.railgun, .ironSand]),
 
     // Three characters per supported series for now.
     // TODO: Kimetsu no Yaiba — Hashibira Inosuke, Kibutsuji Muzan.

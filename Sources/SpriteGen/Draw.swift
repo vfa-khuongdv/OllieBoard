@@ -34,6 +34,8 @@ struct Pose {
     var sitting = false
     var puffCheek = false
     var sweat = false
+    /// Lets a character override the shared picked-up expression without changing everyone else.
+    var dragged = false
     var laptop = false
     var skill: (which: Int, frame: Int)? = nil   // a frame of a special-move row, drawn by drawSkill
 }

@@ -12,6 +12,8 @@ The app lives in the menu bar (🐾) only; it has no Dock icon.
   - Attack on Titan: Eren, Mikasa, Levi
   - Jujutsu Kaisen: Yuji, Gojo, Megumi
   - Hunter x Hunter: Gon, Killua, Kurapika
+  - A Certain Magical Index: Misaka Mikoto (tsundere; Railgun and Iron Sand sword, visual effects only; off by default).
+  - The Apothecary Diaries: Maomao (Poison test and Herbal brew, visual effects only; off by default).
   - Also Anya Forger (Spy x Family), Frieren (Sousou no Frieren), Hitori Gotoh (Bocchi the Rock!) and Rem (Re:Zero).
   - Cat Knight: a kitten in armor with a pink bow and a cream cape, who swears on her sword and charges behind a shield bigger than herself.
 
@@ -41,6 +43,7 @@ Everything is in the 🐾 menu in the menu bar. The menus follow the language pi
 | Menu item | What it does |
 | --- | --- |
 | Nhân vật (Characters) | One submenu per series (plus Chính trị, politics); turn each character on or off. Only Nezuko is on by default. |
+| Vùng né (Keep-out zones) | Keep the pets out of the middle of every screen and/or a rectangle you place over what you are recording. Pets never walk into a zone and walk out of it if they end up inside. Off by default. |
 | Phòng chơi (Play room) | Show the room, pick its scenery (Phong cảnh), choose who is inside it, and move or resize it. |
 | Ngôn ngữ / Language / 言語 | Change the dialogue language. |
 | Nhân vật cho AI agent (Characters for AI agents) | Turn agent mascots on or off, pick which agents, install the Claude Code hook. |
@@ -120,6 +123,7 @@ Sources/
     Pet.swift            Behavior and special moves of one character
     PetWindow.swift      Transparent window that draws a character and handles the mouse
     Room.swift           The play room
+    AvoidZones.swift     Keep-out zones the pets stay out of
     RoomScenes.swift     The play room's scenery for each series
     DesktopIcons.swift   Reads and moves Desktop icons through AppleScript (Finder)
     AgentMonitor.swift   Detects running AI agent sessions

@@ -121,6 +121,7 @@ let animations: [Animation] = [
         p.legFront = sin(a) * 0.35; p.legBack = -sin(a) * 0.35
         p.armFront = .pi * 0.85; p.armBack = .pi * 0.85
         p.eyes = .wide; p.mouth = .o; p.brows = .raised; p.sweat = true
+        p.dragged = true
         p.hairSwing = sin(a) * 0.08
         return p
     }),

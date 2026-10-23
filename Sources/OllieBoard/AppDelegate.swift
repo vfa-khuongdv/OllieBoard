@@ -46,6 +46,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             menu.addItem(group)
         }
         menu.addItem(withTitle: ui(.playRoom), action: nil, keyEquivalent: "").submenu = roomMenu()
+        menu.addItem(withTitle: ui(.avoidZones), action: nil, keyEquivalent: "").submenu = avoidMenu()
 
         let languageItem = menu.addItem(withTitle: "Ngôn ngữ / Language / 言語", action: nil, keyEquivalent: "")
         let languages = NSMenu()
@@ -124,6 +125,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             item.target = self
             item.toolTip = message
         }
+    }
+
+    private func avoidMenu() -> NSMenu {
+        let zones = world.zones
+        let menu = NSMenu()
+        let center = menu.addItem(withTitle: ui(.avoidCenter), action: #selector(toggleAvoidCenter), keyEquivalent: "")
+        center.target = self
+        center.state = zones.centerEnabled ? .on : .off
+        let custom = menu.addItem(withTitle: ui(.avoidCustom), action: #selector(toggleAvoidCustom), keyEquivalent: "")
+        custom.target = self
+        custom.state = zones.customEnabled ? .on : .off
+        let edit = menu.addItem(withTitle: ui(.editAvoid), action: #selector(toggleAvoidEditing), keyEquivalent: "")
+        edit.target = self
+        edit.state = zones.editing ? .on : .off
+        return menu
     }
 
     private func roomMenu() -> NSMenu {
@@ -208,6 +224,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         guard let raw = sender.representedObject as? String, let kind = AgentKind(rawValue: raw) else { return }
         if world.disabledAgentKinds.contains(kind) { world.disabledAgentKinds.remove(kind) } else { world.disabledAgentKinds.insert(kind) }
     }
+
+    @objc private func toggleAvoidCenter() { world.zones.setCenter(!world.zones.centerEnabled) }
+    @objc private func toggleAvoidCustom() { world.zones.setCustom(!world.zones.customEnabled) }
+    @objc private func toggleAvoidEditing() { world.zones.setEditing(!world.zones.editing) }
 
     @objc private func toggleRoom() { world.room.setOpen(!world.room.isOpen) }
 
