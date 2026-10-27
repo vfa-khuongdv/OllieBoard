@@ -2,6 +2,8 @@ import Foundation
 
 enum Line: CaseIterable {
     case happy, bored, tedious, grumpy, kick, arrange, click, poke, wake, noIcons, fail, done
+    // Browser window antics; every character says the generic ones in `genericLines`.
+    case prankStart, prankPanic, prankInnocent
     // Lines aimed at another character; "%@" is replaced by their short name.
     case greet, greetBack, wakeOther, hit, sorry, pranked, chased, comfort, thanks, together
     // Agent mascots only; "{project}" is replaced by the session's project folder.
@@ -88,7 +90,7 @@ extension Character {
     func line(_ kind: Line, to partner: Character? = nil, project: String = "", app: String = "") -> String? {
         let language = Language.current
         guard let own = dialogue[language]?[dialogueID ?? id] else { return nil }
-        var options = own.lines[kind] ?? []
+        var options = own.lines[kind] ?? genericLines[language]?[kind] ?? []
         if kind == .greet, let partner, let special = own.pairGreet[partner.id] { options = special }
         guard let text = options.randomElement() else { return nil }
         return text.replacingOccurrences(of: "%@", with: partner?.displayName(in: language) ?? "")
@@ -96,3 +98,16 @@ extension Character {
             .replacingOccurrences(of: "{app}", with: app)
     }
 }
+
+/// What every character says for lines that aren't written per character.
+let genericLines: [Language: [Line: [String]]] = [
+    .vi: [.prankStart: ["Hí hí, chỗ này trông ngứa mắt...", "Thử chỉnh chỗ này xem~", "Để mình trang trí chỗ này nhé!"],
+          .prankPanic: ["Á! Bị phát hiện rồi?!", "Hả?! Nó tự biến đổi đó!", "Chết, mọi người nhìn kìa!"],
+          .prankInnocent: ["Mình có làm gì đâu~", "Hôm nay trời đẹp nhỉ... (huýt sáo)", "Không phải mình đâu nha."]],
+    .en: [.prankStart: ["Hehe, this bit looks itchy...", "Let's tweak this~", "Time to decorate this spot!"],
+          .prankPanic: ["Eek! Caught?!", "Huh?! It changed by itself!", "Oh no, everyone's looking!"],
+          .prankInnocent: ["I didn't do anything~", "Nice weather today... (whistles)", "It wasn't me."]],
+    .ja: [.prankStart: ["ふふ、ここ気になるなぁ…", "ここ、ちょっといじっちゃお〜", "ここをデコっちゃうね！"],
+          .prankPanic: ["わっ！ばれた！？", "え！？勝手に変わったよ！", "どうしよう、みんな見てる！"],
+          .prankInnocent: ["私は何もしてないよ〜", "今日はいい天気だね…（口笛）", "私じゃないからね。"]],
+]

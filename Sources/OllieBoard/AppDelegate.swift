@@ -45,48 +45,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         for group in characterGroups(#selector(toggleCharacter(_:)), isOn: { self.world.pets[$0.id] != nil }) {
             menu.addItem(group)
         }
-        menu.addItem(withTitle: ui(.playRoom), action: nil, keyEquivalent: "").submenu = roomMenu()
-
-        let languageItem = menu.addItem(withTitle: "Ngôn ngữ / Language / 言語", action: nil, keyEquivalent: "")
-        let languages = NSMenu()
-        for language in Language.allCases {
-            let item = languages.addItem(withTitle: language.title, action: #selector(setLanguage(_:)), keyEquivalent: "")
-            item.target = self
-            item.representedObject = language.rawValue
-            item.state = language == Language.current ? .on : .off
-        }
-        languageItem.submenu = languages
 
         menu.addItem(.separator())
-        let agentsItem = menu.addItem(withTitle: ui(.agentCharacters), action: #selector(toggleAgents), keyEquivalent: "")
-        agentsItem.target = self
-        agentsItem.state = world.agentsEnabled ? .on : .off
-        if world.agentsEnabled {
-            let kinds = NSMenu()
-            for kind in AgentKind.allCases {
-                let item = kinds.addItem(withTitle: kind.title, action: #selector(toggleAgentKind(_:)), keyEquivalent: "")
-                item.target = self
-                item.representedObject = kind.rawValue
-                item.state = world.disabledAgentKinds.contains(kind) ? .off : .on
-            }
-            menu.addItem(withTitle: "    " + ui(.chooseAgents), action: nil, keyEquivalent: "").submenu = kinds
-            for pet in world.agentPets.values.sorted(by: { ($0.tag ?? "") < ($1.tag ?? "") }) {
-                guard let agent = pet.agent else { continue }
-                let state: String
-                switch agent.state {
-                case .idle: state = ui(.agentIdle)
-                case .working: state = ui(.agentWorking)
-                case .done: state = ui(.agentDone)
-                case .needsInput: state = ui(.agentNeedsYou)
-                }
-                menu.addItem(withTitle: "    \(pet.tag ?? agent.kind.title) — \(state)", action: nil, keyEquivalent: "").isEnabled = false
-            }
-            if ClaudeHooks.isInstalled {
-                menu.addItem(withTitle: "    " + ui(.hookInstalled), action: nil, keyEquivalent: "").isEnabled = false
-            } else {
-                addItem(menu, "    " + ui(.installHook), #selector(installClaudeHooks))
-            }
-        }
+        menu.addItem(withTitle: ui(.playRoom), action: nil, keyEquivalent: "").submenu = roomMenu()
+        menu.addItem(withTitle: ui(.browserInteraction), action: nil, keyEquivalent: "").submenu = browserMenu()
+        menu.addItem(withTitle: ui(.agentCharacters), action: nil, keyEquivalent: "").submenu = agentsMenu()
 
         if let error = world.desktop.lastError {
             menu.addItem(.separator())
@@ -101,8 +64,84 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
 
         menu.addItem(.separator())
+        let languageItem = menu.addItem(withTitle: "Ngôn ngữ / Language / 言語", action: nil, keyEquivalent: "")
+        let languages = NSMenu()
+        for language in Language.allCases {
+            let item = languages.addItem(withTitle: language.title, action: #selector(setLanguage(_:)), keyEquivalent: "")
+            item.target = self
+            item.representedObject = language.rawValue
+            item.state = language == Language.current ? .on : .off
+        }
+        languageItem.submenu = languages
         if Updater.canUpdate { addUpdateItem(menu) }
+
+        menu.addItem(.separator())
         addItem(menu, ui(.quit), #selector(quit), key: "q")
+    }
+
+    private func browserMenu() -> NSMenu {
+        let browser = world.browser
+        let menu = NSMenu()
+        menu.autoenablesItems = false
+        let enable = menu.addItem(withTitle: ui(.enable), action: #selector(toggleBrowser), keyEquivalent: "")
+        enable.target = self
+        enable.state = browser.enabled ? .on : .off
+        let dom = menu.addItem(withTitle: ui(.editPage), action: #selector(toggleEditPage), keyEquivalent: "")
+        dom.target = self
+        dom.state = browser.domEnabled ? .on : .off
+        dom.isEnabled = browser.enabled
+        if browser.enabled {
+            if !browser.isTrusted {
+                menu.addItem(.separator())
+                menu.addItem(withTitle: ui(.browserNeedsAccess), action: nil, keyEquivalent: "").isEnabled = false
+                addItem(menu, ui(.openAccessibility), #selector(openAccessibilitySettings))
+            }
+            if browser.domEnabled, let error = browser.domError {
+                menu.addItem(.separator())
+                let warn = menu.addItem(withTitle: ui(.editPageBlocked), action: nil, keyEquivalent: "")
+                warn.toolTip = error
+                warn.isEnabled = false
+            }
+        }
+        return menu
+    }
+
+    private func agentsMenu() -> NSMenu {
+        let menu = NSMenu()
+        menu.autoenablesItems = false
+        let enable = menu.addItem(withTitle: ui(.enable), action: #selector(toggleAgents), keyEquivalent: "")
+        enable.target = self
+        enable.state = world.agentsEnabled ? .on : .off
+        guard world.agentsEnabled else { return menu }
+
+        let kinds = NSMenu()
+        for kind in AgentKind.allCases {
+            let item = kinds.addItem(withTitle: kind.title, action: #selector(toggleAgentKind(_:)), keyEquivalent: "")
+            item.target = self
+            item.representedObject = kind.rawValue
+            item.state = world.disabledAgentKinds.contains(kind) ? .off : .on
+        }
+        menu.addItem(withTitle: ui(.chooseAgents), action: nil, keyEquivalent: "").submenu = kinds
+        let sessions = world.agentPets.values.sorted(by: { ($0.tag ?? "") < ($1.tag ?? "") })
+        if !sessions.isEmpty { menu.addItem(.separator()) }
+        for pet in sessions {
+            guard let agent = pet.agent else { continue }
+            let state: String
+            switch agent.state {
+            case .idle: state = ui(.agentIdle)
+            case .working: state = ui(.agentWorking)
+            case .done: state = ui(.agentDone)
+            case .needsInput: state = ui(.agentNeedsYou)
+            }
+            menu.addItem(withTitle: "\(pet.tag ?? agent.kind.title) — \(state)", action: nil, keyEquivalent: "").isEnabled = false
+        }
+        menu.addItem(.separator())
+        if ClaudeHooks.isInstalled {
+            menu.addItem(withTitle: ui(.hookInstalled), action: nil, keyEquivalent: "").isEnabled = false
+        } else {
+            addItem(menu, ui(.installHook), #selector(installClaudeHooks))
+        }
+        return menu
     }
 
     /// One item that shows where the update check is and, when a newer version is out, installs it.
@@ -257,6 +296,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     @objc private func openAutomationSettings() {
         NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Automation")!)
+    }
+
+    @objc private func toggleBrowser() {
+        world.browser.enabled.toggle()
+        if world.browser.enabled && !world.browser.isTrusted { world.browser.requestAccess() }
+    }
+
+    @objc private func toggleEditPage() { world.browser.domEnabled.toggle() }
+
+    @objc private func openAccessibilitySettings() {
+        NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!)
     }
 
     @objc private func disableAutoArrange() { world.desktop.disableAutoArrange {} }

@@ -5,6 +5,9 @@ final class World {
     let desktop = DesktopIcons()
     let agents = AgentMonitor()
     let room = Room()
+    let browser = BrowserWindows()
+    let prank = ElementPrank()
+    private var lastButtonScan: TimeInterval = 0
     private(set) var pets: [String: Pet] = [:]
     /// Mascots of running AI agent sessions, by agent process id.
     private(set) var agentPets: [Int32: Pet] = [:]
@@ -52,9 +55,31 @@ final class World {
         let dt = min(now - lastTick, 0.1)
         lastTick = now
         for pet in pets.values { pet.tick(dt) }
+        prank.tick()
+        if browser.enabled, now - lastButtonScan > 8 {
+            lastButtonScan = now
+            browser.scanSpots()
+        }
         if now - lastRefresh > 15 {
             lastRefresh = now
             desktop.refresh()
+        }
+    }
+
+    // MARK: Browser
+
+    /// Messes with one spot of the page: the real DOM when that's switched on and works, else a drawing over it.
+    func runPrank(_ style: ElementPrank.Style, on spot: BrowserWindows.Spot, in window: BrowserWindow,
+                  color: NSColor, sticker: String, duration: TimeInterval) {
+        let overlay = { [weak self] in
+            self?.prank.start(style, on: spot.frame, in: window.id, color: color, sticker: sticker, duration: duration)
+        }
+        guard browser.canEditPage(window) else {
+            overlay()
+            return
+        }
+        browser.editPage(window, spot: spot, style: style, color: color, sticker: sticker, duration: duration) { ok in
+            if !ok { overlay() }
         }
     }
 

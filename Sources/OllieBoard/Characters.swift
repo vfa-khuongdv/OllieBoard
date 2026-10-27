@@ -2,6 +2,8 @@ import Foundation
 
 enum Behavior: CaseIterable {
     case wander, kick, arrange, bored, sleep, grumpy, happy, social, skill
+    /// Messing with the browser page; not in any character's weights, see Pet.chooseBehavior.
+    case prank
 }
 
 /// Special moves from each character's story, used now and then or picked from the right-click menu.
